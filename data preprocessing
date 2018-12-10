@@ -1,0 +1,56 @@
+## Import required libraries
+import pandas as pd
+import numpy as np
+import math
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+## Import the data
+dataset = pd.read_csv(r' .csv')
+dataset = dataset.drop(columns = ['% Opened', % Clicked, 'Clicked to Opened Ratio', 'Sent', '% Delivered', 'Hard Bounced', 'Soft Bounced', 'Pending', 'Unsubscribed', '% Unsubscribed', 'First Activity (America/Chicago)', 'Last Activity (America/Chicago)']) 
+## The general structure of the data is newsletter info, delivered, opened, clicked
+## It will be altered to be property, date, subject line, delivered, opened, clicked
+
+## Clean the subject lines
+holder = dataset['Email Name'].str.split('-', n = 1, expand = True)
+holder.columns = ['Property', 'e-news']
+property = holder['Property']
+holder = holder['e-news'].str.split('.', n = 1, expand = True)
+holder.columns = ['Pub Date', 'Subject']
+pub_date = holder['Pub Date']
+
+## Remove filler subject lines such as "PMG Daily Update" and "Subject Line Test"
+subject = holder[~holder.Subject.str.contains('Subject Line')]
+subject = subject[~subject.Subject.str.contains('PMG')]
+holder = pd.concat((property, pub_date, subject), axis = 1)
+
+## This is the grouping variable
+ctr = dataset['Clicked'] / dataset['Opened']
+ctr = pd.DataFrame(ctr, columns = ['ctr'])
+data = pd.concat((holder, ctr), axis = 1)
+
+## Plot data by click through rate to identify outliers
+ctr_graph = sns.distplot(data['ctr'], bins = 20)
+ctr_graph.set(xlabel = 'Click Through Rate')
+ctr_graph.set_title('Histogram of e-newsletters by Click Through Rate')
+
+## Remove outliers
+data = data[data['ctr'] <= .6]
+data = data[data['ctr'] != 0]
+
+## Replot to confirm changes and removal of outliers
+ctr_graph = sns.distplot(data['ctr'], bins = 20)
+ctr_graph.set(xlabel = 'Click Through Rate')
+ctr_graph.set_title('Histogram of e-newsletters by Click Through Rate')
+
+data = data.sort_values(by = 'ctr', ascending = True)
+n = math.ceil(data.shape[0] * 0.2) # Is equal to 20% of the total dataset size
+
+bottom = data.iloc[:n, :]
+top = data.iloc[-n:, :]
+
+bottom['group'] = 0
+top['group'] = 1
+
+prepped_data = pd.concat((bottom, top), axis = 0 )
