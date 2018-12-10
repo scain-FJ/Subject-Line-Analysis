@@ -1,0 +1,20 @@
+## Import required libraries
+import pandas as pd
+import numpy as np
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+import nltk
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import cross_val_score
+from sklearn.decomposition import PCA
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+
+## Dataset is the 'prepped_data' from the preprocessing step
+## Prepare functions
+count_vect = CountVectorizer(max_features = 3000)
+pca = PCA(0.95)
